@@ -18,7 +18,7 @@ num_steps = 500
 
 # Initialize molecule positions and velocities randomly
 positions = np.random.rand(num_molecules, 3) * cube_size
-velocities = np.random.randn(num_molecules, 3) * 100.0  # Initial velocities
+velocities = np.random.randn(num_molecules, 3) * 50.0  # Initial velocities
 
 # Metadynamics parameters
 metadynamics_interval = 100
@@ -56,12 +56,11 @@ for step in range(num_steps):
     # Update positions using Verlet integration
     positions += velocities * (time_step / animation_speed) + 0.5 * (time_step**2) * bias_potential[step][:, np.newaxis] / m
 
-    # Apply periodic boundary conditions
-    positions = np.mod(positions, cube_size)
-
     # Calculate forces using Lennard-Jones potential
     distances = np.linalg.norm(positions[:, np.newaxis, :] - positions, axis=2)
-    distances[distances == 0] = 1.0  # Avoid division by zero
+    distances[distances == 0] = 1.0  # Avoid division by zero    
+    positions = np.mod(positions, cube_size)
+
     forces = 48 * epsilon * ((sigma / distances)**13 - 0.5 * (sigma / distances)**7)[:, :, np.newaxis] \
              * (positions[:, np.newaxis, :] - positions) / distances[:, :, np.newaxis]**2
 
@@ -71,7 +70,7 @@ for step in range(num_steps):
     np.fill_diagonal(forces[:,:,2], 0)
 
     # Calculate total forces and update velocities
-    total_forces = np.sum(forces, axis=1)
+    total_forces = np.sum(forces, axis = 1)
     velocities += total_forces * (time_step / animation_speed) / m
 
     # Apply metadynamics bias potential
@@ -89,6 +88,10 @@ def update(frame):
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
     ax.set_title(f'Molecular Dynamics Simulation - Frame {frame}')
+    ax.set_xlim([0, cube_size])
+    ax.set_ylim([0, cube_size])
+    ax.set_zlim([0, cube_size])
+    ax.set_box_aspect([1, 1, 1])
 
 # Create a 3D plot
 fig = plt.figure()
